@@ -75,13 +75,13 @@ def getBalloon(token):
 					time.sleep(0.5)
 					return True
 				print("錯誤！{}".format(errDic[res['error']]))
-				time.sleep(0.1)
+				time.sleep(0.25)
 			else:
 				allAmount = res["enter_code_amount"]
 				curAmount = res["current_token_amount"]
 				print("成功！已兌換{}顆氣球，當前擁有{}顆氣球".format(allAmount,curAmount))
 				countSuccess +=1
-				time.sleep(0.4)
+				time.sleep(1)
 			countSubmit += 1
 def redeemBalloon(token,item_id):
 	url = "https://bargain.lol.garena.tw/api/redeem"
@@ -94,6 +94,7 @@ def redeemBalloon(token,item_id):
 	resJson = json.loads(res.text)
 	if 'reward' in resJson.keys():
 		print("已兌換獎勵：{}".format(resJson['reward']['name']))
+		time.sleep(0.5)
 	#else:
 	#	print(resJson)
 def Balloon(token):
@@ -106,8 +107,8 @@ def Balloon(token):
 if __name__ == '__main__':
 	token = ""
 	while(not token):
-		url = input("請輸入token，或貼上活動頁面「個人數據回顧」中包含token的網址：")
-		reUrl = re.match(r'https://datareview\.lol\.garena\.tw/.+?token=(.+)', url)
+		url = input("請輸入token，或貼上包含token的網址：")
+		reUrl = re.match(r'https://.+?\.lol\.garena\.tw/.+?token=(.+)', url)
 		token = reUrl.group(1) if reUrl else (url if len(url) == 64 else token)
 		if token: Balloon(token)
 
