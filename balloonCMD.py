@@ -1,4 +1,5 @@
 import os, re, time
+import random
 import requests, json
 
 requests.packages.urllib3.disable_warnings()
@@ -13,8 +14,8 @@ def parseCode(inputList):
 def getGarenaComment(rootID=0,num=5):
 	url = "https://commenttw.garenanow.com/api/comments/get/"
 	header = {'User-Agent': 'Garenagxx/2.0.1909.2618 (Intel x86_64; zh-Hant; TW)',"Content-Type": 'application/json'}
-	data = {"obj_id": "tw_32775_newnews_32159",
-			#"obj_id": "tw_32775_newnews_32153",
+	news = ["32165","32164","32159"] #"32153"
+	data = {"obj_id": "tw_32775_newnews_{}".format(random.choice(news)),
 			"root_id": 0,
 			"size": num, #留言數量
 			"replies": 10, 
@@ -62,27 +63,27 @@ def codeSubmit(token,code):
 	else:
 		print(resJson)
 def getBalloon(token):
-	countSubmit = countSuccess = errCode = finish = 0
+	countSubmit = countSuccess = errCode = allAmount = 0
 	time1 = time.time()
-	while(not finish and errCode < 3):
+	while(errCode < 3):
 		for index, code in enumerate(parseCode(getGarenaComment(num=3)), start=1):
-			print("正在輸入第{:^3d}組序號 {} ：".format(countSubmit,code),end="")
+			countSubmit += 1
+			print("正在輸入第{:^3d}組序號 {} : ".format(countSubmit,code),end="")
 			res = codeSubmit(token,code)
 			if "error" in res.keys():
-				if res['error'] == "ERROR__ENTER_CODE_AMOUNT_OUT_OF_QUOTA":
+				if res['error'] == "ERROR__ENTER_CODE_AMOUNT_OUT_OF_QUOTA" or allAmount == 60:
 					time2 = time.time()
-					print("已獲取{}/60顆氣球，共兌換{}次、費時{}秒，準備開始自動兌換獎勵。".format(countSuccess,countSubmit,round(time2-time1,2)))
+					print("\n已獲取{}/60顆氣球，共兌換{}次、費時{}秒，準備開始自動兌換獎勵。".format(countSuccess,countSubmit,round(time2-time1,2)))
 					time.sleep(0.5)
 					return True
 				print("錯誤！{}".format(errDic[res['error']]))
-				time.sleep(0.4)
+				time.sleep(0.3)
 			else:
 				allAmount = res["enter_code_amount"]
 				curAmount = res["current_token_amount"]
 				print("成功！已兌換{}顆氣球，當前擁有{}顆氣球".format(allAmount,curAmount))
 				countSuccess +=1
-				time.sleep(1.6)
-			countSubmit += 1
+				time.sleep(1.2)
 def redeemBalloon(token,item_id):
 	url = "https://bargain.lol.garena.tw/api/redeem"
 	header = {	'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.107 Safari/537.36',
