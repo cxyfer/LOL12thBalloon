@@ -18,10 +18,8 @@ def parseCode(inputList):
 def getGarenaComment(rootID=0,num=5):
 	url = "https://commenttw.garenanow.com/api/comments/get/"
 	header = {'User-Agent': 'Garenagxx/2.0.1909.2618 (Intel x86_64; zh-Hant; TW)',"Content-Type": 'application/json'}
-	news = ["32165","32164","32159"] #"32153"
+	news = ["32165"] #"32164", "32159", "32153"
 	data = {"obj_id": "tw_32775_newnews_{}".format(random.choice(news)),
-			#"obj_id": "tw_32775_newnews_32164",
-			#"obj_id": "tw_32775_newnews_32159",
 			"root_id": 0,
 			"size": num, #留言數量
 			"replies": 10, 
@@ -89,9 +87,9 @@ def getPosConfirm():
 	print("已獲取輸入框位置: {}".format(posInbox))
 	return posInbox
 def confirmObject(errPrint=True,errNum=5):
-	posConfirm = None
-	errSubmit = 0
 	for i in range(2):
+		posConfirm = None
+		errSubmit = 0
 		while posConfirm is None and errSubmit < errNum:
 			checkKeyEnd()
 			posConfirm = pyautogui.locateCenterOnScreen('imgs/confirm.png', confidence=0.8)
@@ -101,7 +99,7 @@ def confirmObject(errPrint=True,errNum=5):
 			print("出現異常，無法跳出確認視窗")
 			break
 		pyautogui.click(posConfirm)
-		time.sleep(0.3)
+		time.sleep(0.2)
 		
 def balloonExchange():
 	posExArea = pyautogui.locateCenterOnScreen('./imgs/exArea.png') #Exchange Area
@@ -153,21 +151,7 @@ while(True and errCode < 3):
 		#pyautogui.write(code)
 		pyautogui.hotkey('ctrl', 'v')
 		pyautogui.click(posSubmit)
-		errSubmit = 0
-		for i in range(2):
-			ok_position = pyautogui.locateCenterOnScreen('imgs/confirm.png', confidence=0.8)
-			while ok_position is None and errSubmit < 5:
-				checkKeyEnd()
-				ok_position = pyautogui.locateCenterOnScreen('imgs/confirm.png', confidence=0.8)
-				#print(f'正在擷取「確定」位置:{ok_position}')
-				errSubmit += 1
-				time.sleep(0.15)
-			if errSubmit >= 5:
-				break
-			pyautogui.click(ok_position)
-			time.sleep(0.1)
-		if errSubmit >= 5:
-			print(f'輸入序號時出現異常，無法跳出確認視窗')
+		confirmObject(errNum = 5)
 		count = count +1
 		time.sleep(0.1)
 		if keyboard.is_pressed('p'): #Paused

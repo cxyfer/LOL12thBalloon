@@ -14,7 +14,7 @@ def parseCode(inputList):
 def getGarenaComment(rootID=0,num=5):
 	url = "https://commenttw.garenanow.com/api/comments/get/"
 	header = {'User-Agent': 'Garenagxx/2.0.1909.2618 (Intel x86_64; zh-Hant; TW)',"Content-Type": 'application/json'}
-	news = ["32165","32164","32159"] #"32153"
+	news = ["32165"] #"32164", "32159", "32153"
 	data = {"obj_id": "tw_32775_newnews_{}".format(random.choice(news)),
 			"root_id": 0,
 			"size": num, #留言數量
@@ -58,10 +58,6 @@ def codeSubmit(token,code):
 	res = requests.post(url, headers=header, data=json.dumps(data))
 	resJson = json.loads(res.text)
 	return resJson
-	if "error" in resJson.keys():
-		print(errDic[resJson['error']])
-	else:
-		print(resJson)
 def getBalloon(token):
 	countSubmit = countSuccess = errCode = allAmount = 0
 	time1 = time.time()
@@ -73,17 +69,17 @@ def getBalloon(token):
 			if "error" in res.keys():
 				if res['error'] == "ERROR__ENTER_CODE_AMOUNT_OUT_OF_QUOTA" or allAmount == 60:
 					time2 = time.time()
-					print("\n已獲取{}/60顆氣球，共兌換{}次、費時{}秒，準備開始自動兌換獎勵。".format(countSuccess,countSubmit,round(time2-time1,2)))
-					time.sleep(0.5)
+					print("\n已獲取{}/60顆氣球，共嘗試{}次、費時{}秒，準備開始自動兌換獎勵。".format(countSuccess,countSubmit,round(time2-time1,2)))
+					time.sleep(1)
 					return True
 				print("錯誤！{}".format(errDic[res['error']]))
-				time.sleep(0.3)
+				time.sleep(0.4)
 			else:
 				allAmount = res["enter_code_amount"]
 				curAmount = res["current_token_amount"]
 				print("成功！已兌換{}顆氣球，當前擁有{}顆氣球".format(allAmount,curAmount))
 				countSuccess +=1
-				time.sleep(1.2)
+				time.sleep(1.6)
 def redeemBalloon(token,item_id):
 	url = "https://bargain.lol.garena.tw/api/redeem"
 	header = {	'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.107 Safari/537.36',
