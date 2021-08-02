@@ -23,7 +23,7 @@
   - submit1.png
   - submit2.png
 
-## balloonCMD.exe
+## ~~balloonCMD.exe~~ (已被Garena禁用)
 使用token在背景執行，需自行取得token
 
 ### 功能
