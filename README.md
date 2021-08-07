@@ -13,8 +13,8 @@
 ### 使用說明
 1. 開啟LOL主程式並**進入活動頁面**（不能只開主程式）
 2. 打開程式，正常情況下會自動獲取token並開始運行
-  1. 若無法自動獲取token請輸入LOL安裝路徑下`LeagueClient Logs`資料夾之完整路徑，如 `C:\Garena\Games\32775\Game\Logs\LeagueClient Logs`（請自行依安裝路徑調整）
-  2. 也可自行獲取token後，輸入64位長度的token、或是包含token的活動網址
+   - 若無法自動獲取token請輸入LOL安裝路徑下`LeagueClient Logs`資料夾之完整路徑，如 `C:\Garena\Games\32775\Game\Logs\LeagueClient Logs`（請自行依安裝路徑調整）
+   - 也可自行獲取token後，輸入64位長度的token、或是包含token的活動網址
 
 ### 參數設置
 需cd到程式所在目錄，以命令列參數方式設置（正常使用可忽略此部分）
