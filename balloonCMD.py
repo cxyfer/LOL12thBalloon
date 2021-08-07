@@ -132,7 +132,7 @@ if __name__ == '__main__':
 	global args
 	parser = getParser()
 	args = parser.parse_args()
-	token = getToken(args.folder)
+	token = getToken(args.dir)
 	while(not token):
 		url = input("請輸入token，或貼上包含token的網址、或輸入LeagueClient Logs之路徑：\n ")
 		reUrl = re.match(r'https://.+?\.lol\.garena\.tw/.+?token=(.+)', url)
