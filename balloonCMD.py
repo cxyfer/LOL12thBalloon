@@ -113,12 +113,16 @@ def getToken(folder,errPrint=True):
 		for file in sorted(os.listdir(folder),reverse=True):
 			reLog = re.match(r'.+?_LeagueClientUx\.log', file)
 			if reLog:
-				with open("{}\\{}".format(folder,file), 'r') as data:
-					reToken = re.search(r'https://.+?\.lol\.garena\.tw/.+?token=(.+)\"', data.read())
-					if reToken:
-						token = reToken.group(1)
-						print("已從LOL安裝路徑獲取token：{}".format(reToken.group(1)))
-						return reToken.group(1)
+				try:
+					with open("{}\\{}".format(folder,file), 'r', encoding="utf-8") as data:
+						reToken = re.search(r'https://.+?\.lol\.garena\.tw/.+?token=(.+)\"', data.read())
+				except:
+					with open("{}\\{}".format(folder,file), 'r') as data:
+						reToken = re.search(r'https://.+?\.lol\.garena\.tw/.+?token=(.+)\"', data.read())
+				if reToken:
+					token = reToken.group(1)
+					print("已從LOL安裝路徑獲取token：{}".format(reToken.group(1)))
+					return reToken.group(1)
 	print("錯誤：無法從LOL安裝路徑獲取token，請嘗試輸入安裝路徑或手動獲取token。") if errPrint else print(end="")
 	return False
 def getParser():
