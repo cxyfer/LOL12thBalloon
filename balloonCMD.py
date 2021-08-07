@@ -1,6 +1,7 @@
 import os, re, time
 import random
 import requests, json
+import argparse
 
 requests.packages.urllib3.disable_warnings()
 def parseCode(inputList):
@@ -63,10 +64,11 @@ errDic = {
 		"ERROR__TOKEN_REWARD_OUT_OF_QUOTA": "已經領完獎勵囉",
 		"ERROR__GAME_LOGIN_FAILED": "登入失敗"
 	}
-def getBalloon(token):
+def getBalloon(token,sucDelay=1.25,errDelay=0.5):
 	countSubmit = countSuccess = errCode = allAmount = 0
 	time1 = time.time()
-	while(errCode < 3):
+	print("當前設定：輸入失敗後延遲{}秒、輸入成功後延遲{}秒".format(errDelay,sucDelay))
+	while(errCode < 3 and allAmount < 60):
 		for index, code in enumerate(parseCode(getGarenaComment(num=5)), start=1):
 			countSubmit += 1
 			print("  正在輸入第{:^3d}組序號 {} : ".format(countSubmit,code),end="")
@@ -78,13 +80,13 @@ def getBalloon(token):
 					time.sleep(1)
 					return True
 				print("錯誤！{}".format(errDic[res['error']]))
-				time.sleep(0.2)
+				time.sleep(errDelay)
 			else:
 				allAmount = res["enter_code_amount"]
 				curAmount = res["current_token_amount"]
 				print("成功！已兌換{}顆氣球，當前擁有{}顆氣球".format(allAmount,curAmount))
 				countSuccess +=1
-				time.sleep(0.8)
+				time.sleep(sucDelay)
 def redeemBalloon(token,item_id):
 	url = "https://bargain.lol.garena.tw/api/redeem"
 	header = {	"User-Agent": "Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) LeagueOfLegendsClient/11.15.388.2387 (CEF 74) Safari/537.36",
@@ -97,10 +99,10 @@ def redeemBalloon(token,item_id):
 	res = requests.post(url, headers=header, data=json.dumps(data))
 	resJson = json.loads(res.text)
 	if 'reward' in resJson.keys():
-		print("已兌換獎勵：{}".format(resJson['reward']['name']))
+		print("  已兌換獎勵：{}".format(resJson['reward']['name']))
 		time.sleep(1)
 def Balloon(token):
-	if(getBalloon(token)):
+	if(getBalloon(token,sucDelay=args.sucDelay,errDelay=args.errDelay)):
 		for i in range(1,10):
 			redeemBalloon(token,i)
 		redeemBalloon(token,9)
@@ -114,13 +116,23 @@ def getToken(folder,errPrint=True):
 				with open("{}\\{}".format(folder,file), 'r') as data:
 					reToken = re.search(r'https://.+?\.lol\.garena\.tw/.+?token=(.+)\"', data.read())
 					if reToken:
+						token = reToken.group(1)
 						print("已從LOL安裝路徑獲取token：{}".format(reToken.group(1)))
 						return reToken.group(1)
 	print("錯誤：無法從LOL安裝路徑獲取token，請嘗試輸入安裝路徑或手動獲取token。") if errPrint else print(end="")
 	return False
+def getParser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-s", "--sucDelay", default="1.25", type=float)
+    parser.add_argument("-e", "--errDelay", default="0.5", type=float)
+    parser.add_argument("-d", "--dir", "--folder", default="C:\\Garena\\Games\\32775\\Game\\Logs\\LeagueClient Logs")
+    return parser
+
 if __name__ == '__main__':
-	folder = "C:\\Garena\\Games\\32775\\Game\\Logs\\LeagueClient Logs"
-	token = getToken(folder)
+	global args
+	parser = getParser()
+	args = parser.parse_args()
+	token = getToken(args.folder)
 	while(not token):
 		url = input("請輸入token，或貼上包含token的網址、或輸入LeagueClient Logs之路徑：\n ")
 		reUrl = re.match(r'https://.+?\.lol\.garena\.tw/.+?token=(.+)', url)
