@@ -23,7 +23,7 @@
   - submit1.png
   - submit2.png
 
-## ~~balloonCMD.exe~~ (已被Garena禁用)
+## balloonCMD.exe (恢復使用)
 使用token在背景執行，需自行取得token
 
 ### 功能
@@ -34,8 +34,8 @@
 ### 使用說明
 1. 開啟LOL主程式並進入活動頁面
 2. 開啟 `C:\Garena\Games\32775\Game\Logs\LeagueClient Logs` 資料夾（請自行依安裝路徑調整）
-3. 使用記事本打開最新的_LeagueClient.log文件
-![](https://i.imgur.com/B8p9Tp2.png)
+3. 使用記事本打開最新的 `_LeagueClientUx.log` 文件
+![](https://i.imgur.com/NUZV33G.png)
 4. 在其中搜尋 `https://bargain.lol.garena.tw/?token=`
-![](https://i.imgur.com/09ndWug.png)
+![](https://i.imgur.com/ZQNwUbU.png)
 5. 複製網址貼上到程式中

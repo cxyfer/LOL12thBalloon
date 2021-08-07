@@ -6,15 +6,15 @@ requests.packages.urllib3.disable_warnings()
 def parseCode(inputList):
 	codeList = []
 	for line in inputList:
-		findPos = line.find("LOL")
-		if findPos != -1:
-			code = line[findPos:findPos+13]
+		findPos = re.search(r'LOL[A-Za-z0-9]{10}', line)
+		if findPos:
+			code = findPos.group(0)
 			codeList.append(code)
 	return codeList if len(codeList) > 0 else False
 def getGarenaComment(rootID=0,num=5):
 	url = "https://commenttw.garenanow.com/api/comments/get/"
 	header = {'User-Agent': 'Garenagxx/2.0.1909.2618 (Intel x86_64; zh-Hant; TW)',"Content-Type": 'application/json'}
-	news = ["32165"] #"32164", "32159", "32153"
+	news = ["32194"] #"32165", "32164", "32159", "32153"
 	data = {"obj_id": "tw_32775_newnews_{}".format(random.choice(news)),
 			"root_id": 0,
 			"size": num, #留言數量
@@ -30,7 +30,23 @@ def getGarenaComment(rootID=0,num=5):
 		contentList = [comment['extra_data']['content'].strip() for comment in resJson["comment_list"]]
 		codeList = parseCode(contentList)
 		return codeList if codeList else getGarenaComment(num=num)
-errDic = {
+def codeSubmit(header,code):
+	url = "https://bargain.lol.garena.tw/api/enter"
+	header = {	"User-Agent": "Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) LeagueOfLegendsClient/11.15.388.2387 (CEF 74) Safari/537.36",
+				"Content-Type": 'application/json',
+        		"Accept-Encoding": "gzip,deflate",
+        		"Referer": "https://bargain.lol.garena.tw/?token={}".format(token),
+				#"X-CSRFToken": "FFbSAmMWmZUC1i0WZukgnEKzKP3bsjgjR60ZFIFZcpgnnpIPOGt4R4vTdY6jzHg3",
+				"token":token
+			}
+	data = {'code':code, 'confirm':False}
+	res = requests.post(url, headers=header, json=data)
+	data['confirm'] = True
+	res = requests.post(url, headers=header, json=data)
+	resJson = json.loads(res.text)
+	return resJson
+def getBalloon(token):
+	errDic = {
 		"ERROR__SERVER_ERROR": "系統忙碌中，請稍後再試！",
 		"ERROR__BAD_REQUEST": "系統錯誤，請稍後再試！",
 		"ERROR__UNDER_MAINTENANCE": "系統維護中",
@@ -46,23 +62,11 @@ errDic = {
 		"ERROR__BANNED_PLAYER": "玩家已被禁止進入活動",
 		"ERROR__TOKEN_REWARD_OUT_OF_QUOTA": "已經領完獎勵囉",
 		"ERROR__GAME_LOGIN_FAILED": "登入失敗"
-	}
-def codeSubmit(token,code):
-	url = "https://bargain.lol.garena.tw/api/enter"
-	header = {	'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.107 Safari/537.36',
-				"Content-Type": 'application/json',
-				#"X-CSRFToken": "FFbSAmMWmZUC1i0WZukgnEKzKP3bsjgjR60ZFIFZcpgnnpIPOGt4R4vTdY6jzHg3",
-				"token":token
-			}
-	data = {'code':code, 'confirm':True}
-	res = requests.post(url, headers=header, data=json.dumps(data))
-	resJson = json.loads(res.text)
-	return resJson
-def getBalloon(token):
+		}
 	countSubmit = countSuccess = errCode = allAmount = 0
 	time1 = time.time()
 	while(errCode < 3):
-		for index, code in enumerate(parseCode(getGarenaComment(num=3)), start=1):
+		for index, code in enumerate(parseCode(getGarenaComment(num=4)), start=1):
 			countSubmit += 1
 			print("正在輸入第{:^3d}組序號 {} : ".format(countSubmit,code),end="")
 			res = codeSubmit(token,code)
@@ -73,17 +77,19 @@ def getBalloon(token):
 					time.sleep(1)
 					return True
 				print("錯誤！{}".format(errDic[res['error']]))
-				time.sleep(0.4)
+				time.sleep(0.25)
 			else:
 				allAmount = res["enter_code_amount"]
 				curAmount = res["current_token_amount"]
 				print("成功！已兌換{}顆氣球，當前擁有{}顆氣球".format(allAmount,curAmount))
 				countSuccess +=1
-				time.sleep(1.6)
+				time.sleep(1)
 def redeemBalloon(token,item_id):
 	url = "https://bargain.lol.garena.tw/api/redeem"
-	header = {	'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.107 Safari/537.36',
+	header = {	"User-Agent": "Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) LeagueOfLegendsClient/11.15.388.2387 (CEF 74) Safari/537.36",
 				"Content-Type": 'application/json',
+        		"Accept-Encoding": "gzip,deflate",
+        		"Referer": "https://bargain.lol.garena.tw/?token={}".format(token),
 				"token":token
 			}
 	data = {'item_id':item_id, 'type':2}
@@ -92,8 +98,6 @@ def redeemBalloon(token,item_id):
 	if 'reward' in resJson.keys():
 		print("已兌換獎勵：{}".format(resJson['reward']['name']))
 		time.sleep(1)
-	#else:
-	#	print(resJson)
 def Balloon(token):
 	if(getBalloon(token)):
 		for i in range(1,10):

@@ -18,7 +18,7 @@ def parseCode(inputList):
 def getGarenaComment(rootID=0,num=5):
 	url = "https://commenttw.garenanow.com/api/comments/get/"
 	header = {'User-Agent': 'Garenagxx/2.0.1909.2618 (Intel x86_64; zh-Hant; TW)',"Content-Type": 'application/json'}
-	news = ["32165"] #"32164","32159", "32153"
+	news = ["32194"] #"32165", "32164", "32159", "32153"
 	data = {"obj_id": "tw_32775_newnews_{}".format(random.choice(news)),
 			"root_id": 0,
 			"size": num, #留言數量
