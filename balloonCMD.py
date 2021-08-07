@@ -14,7 +14,7 @@ def parseCode(inputList):
 def getGarenaComment(rootID=0,num=5):
 	url = "https://commenttw.garenanow.com/api/comments/get/"
 	header = {'User-Agent': 'Garenagxx/2.0.1909.2618 (Intel x86_64; zh-Hant; TW)',"Content-Type": 'application/json'}
-	news = ["32194"] #"32165", "32164", "32159", "32153"
+	news = ["32194","32193"] #"32165", "32164", "32159", "32153"
 	data = {"obj_id": "tw_32775_newnews_{}".format(random.choice(news)),
 			"root_id": 0,
 			"size": num, #留言數量
@@ -30,6 +30,7 @@ def getGarenaComment(rootID=0,num=5):
 		contentList = [comment['extra_data']['content'].strip() for comment in resJson["comment_list"]]
 		codeList = parseCode(contentList)
 		return codeList if codeList else getGarenaComment(num=num)
+
 def codeSubmit(header,code):
 	url = "https://bargain.lol.garena.tw/api/enter"
 	header = {	"User-Agent": "Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) LeagueOfLegendsClient/11.15.388.2387 (CEF 74) Safari/537.36",
@@ -45,8 +46,7 @@ def codeSubmit(header,code):
 	res = requests.post(url, headers=header, json=data)
 	resJson = json.loads(res.text)
 	return resJson
-def getBalloon(token):
-	errDic = {
+errDic = {
 		"ERROR__SERVER_ERROR": "系統忙碌中，請稍後再試！",
 		"ERROR__BAD_REQUEST": "系統錯誤，請稍後再試！",
 		"ERROR__UNDER_MAINTENANCE": "系統維護中",
@@ -62,13 +62,14 @@ def getBalloon(token):
 		"ERROR__BANNED_PLAYER": "玩家已被禁止進入活動",
 		"ERROR__TOKEN_REWARD_OUT_OF_QUOTA": "已經領完獎勵囉",
 		"ERROR__GAME_LOGIN_FAILED": "登入失敗"
-		}
+	}
+def getBalloon(token):
 	countSubmit = countSuccess = errCode = allAmount = 0
 	time1 = time.time()
 	while(errCode < 3):
-		for index, code in enumerate(parseCode(getGarenaComment(num=4)), start=1):
+		for index, code in enumerate(parseCode(getGarenaComment(num=5)), start=1):
 			countSubmit += 1
-			print("正在輸入第{:^3d}組序號 {} : ".format(countSubmit,code),end="")
+			print("  正在輸入第{:^3d}組序號 {} : ".format(countSubmit,code),end="")
 			res = codeSubmit(token,code)
 			if "error" in res.keys():
 				if res['error'] == "ERROR__ENTER_CODE_AMOUNT_OUT_OF_QUOTA" or allAmount == 60:
@@ -77,13 +78,13 @@ def getBalloon(token):
 					time.sleep(1)
 					return True
 				print("錯誤！{}".format(errDic[res['error']]))
-				time.sleep(0.25)
+				time.sleep(0.2)
 			else:
 				allAmount = res["enter_code_amount"]
 				curAmount = res["current_token_amount"]
 				print("成功！已兌換{}顆氣球，當前擁有{}顆氣球".format(allAmount,curAmount))
 				countSuccess +=1
-				time.sleep(1)
+				time.sleep(0.8)
 def redeemBalloon(token,item_id):
 	url = "https://bargain.lol.garena.tw/api/redeem"
 	header = {	"User-Agent": "Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) LeagueOfLegendsClient/11.15.388.2387 (CEF 74) Safari/537.36",
@@ -105,11 +106,24 @@ def Balloon(token):
 		redeemBalloon(token,9)
 	input("已兌換完畢，請按Enter離開程式")
 
+def getToken(folder,errPrint=True):
+	if os.path.isdir(folder):
+		for file in sorted(os.listdir(folder),reverse=True):
+			reLog = re.match(r'.+?_LeagueClientUx\.log', file)
+			if reLog:
+				with open("{}\\{}".format(folder,file), 'r') as data:
+					reToken = re.search(r'https://.+?\.lol\.garena\.tw/.+?token=(.+)\"', data.read())
+					if reToken:
+						print("已從LOL安裝路徑獲取token：{}".format(reToken.group(1)))
+						return reToken.group(1)
+	print("錯誤：無法從LOL安裝路徑獲取token，請嘗試輸入安裝路徑或手動獲取token。") if errPrint else print(end="")
+	return False
 if __name__ == '__main__':
-	token = ""
+	folder = "C:\\Garena\\Games\\32775\\Game\\Logs\\LeagueClient Logs"
+	token = getToken(folder)
 	while(not token):
-		url = input("請輸入token，或貼上包含token的網址：")
+		url = input("請輸入token，或貼上包含token的網址、或輸入LeagueClient Logs之路徑：\n ")
 		reUrl = re.match(r'https://.+?\.lol\.garena\.tw/.+?token=(.+)', url)
-		token = reUrl.group(1) if reUrl else (url if len(url) == 64 else token)
-		if token: Balloon(token)
+		token = reUrl.group(1) if reUrl else (url if len(url) == 64 else getToken(url))
+	if token: Balloon(token)
 

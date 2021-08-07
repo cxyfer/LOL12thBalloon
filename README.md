@@ -32,6 +32,10 @@
 - 完成後自動停止並播放通知，大約**3分鐘**可以搶完60顆氣球
 
 ### 使用說明
+1. 開啟LOL主程式並**進入活動頁面**
+2. 打開程式，若無法自動獲取token請輸入LOL安裝路徑下`LeagueClient Logs`資料夾之完整路徑，如 `C:\Garena\Games\32775\Game\Logs\LeagueClient Logs`（請自行依安裝路徑調整）
+
+### ~~獲取token~~ (已改為自動獲取token)
 1. 開啟LOL主程式並進入活動頁面
 2. 開啟 `C:\Garena\Games\32775\Game\Logs\LeagueClient Logs` 資料夾（請自行依安裝路徑調整）
 3. 使用記事本打開最新的 `_LeagueClientUx.log` 文件
