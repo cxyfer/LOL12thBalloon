@@ -18,10 +18,13 @@
 
 ### 參數設置
 需cd到程式所在目錄，以命令列參數方式設置（正常使用可忽略此部分）
+- `-d`或`--dir`或`--folder`：LOL主程式LOG檔案路徑，預設為`C:\Garena\Games\32775\Game\Logs\LeagueClient Logs`
+- `-t`或`--token`：也可以此方式手動輸入token，預設為空字串。
+- `-f`或`--site`或`--from`：邀請碼來源站點，默認為`Garena`，可改為`Bahamut`，但不推薦，約需花兩倍時間
+- `-n`或`--num`：單次載入的最新留言數量，預設為5則
 - `-s`或`--sucDelay`：輸入成功後延遲多少秒，預設為1.25秒
 - `-e`或`--errDelay`：輸入失敗後延遲多少秒，預設為0.5秒
-- `-d`或`--dir`或`--folder`：LOL主程式LOG檔案路徑，預設為`C:\Garena\Games\32775\Game\Logs\LeagueClient Logs`
-- 範例：$ `balloonCMD.exe -s 0.1 -e 0.1`
+- 範例：$ `balloonCMD.exe -s 0.1 -e 0.1 -n 3`
 
 ### ~~獲取token~~ (已改為自動獲取token)
 
