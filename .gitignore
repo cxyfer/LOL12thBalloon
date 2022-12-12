@@ -1,5 +1,12 @@
 LOL12thBalloon/
 LOL12thBalloon.zip
+imgs2/
+acpw.txt
+actoken.txt
+token.txt
+*.txt
+*.log
+*.db
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

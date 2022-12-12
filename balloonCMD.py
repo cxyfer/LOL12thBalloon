@@ -128,12 +128,17 @@ def redeemBalloon(token,item_id,typ=2):
 		print("  已兌換獎勵：{}".format(resJson['reward']['name']))
 		time.sleep(1)
 def Balloon(token):
+	for i in range(1,10):
+		redeemBalloon(token,i)
+	redeemBalloon(token,9)
+	'''
 	if(getBalloon(token,sucDelay=args.sucDelay,errDelay=args.errDelay)):
 		for i in range(1,10):
 			redeemBalloon(token,i)
 		redeemBalloon(token,9)
+	'''
 	if args.skin : redeemBalloon(token, args.skin, typ=1)
-	input("已兌換完畢，請按Enter離開程式")
+	#input("已兌換完畢，請按Enter離開程式")
 
 def getParser():
 	parser = argparse.ArgumentParser()
