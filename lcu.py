@@ -266,9 +266,7 @@ if __name__ == '__main__':
 	auth = getAuth("C:\\Garena\\Games\\32775\\Game\\Logs\\LeagueClient Logs", sucPrint=False) if not auth else auth
 
 	#accessAllFriendRequests(auth)
-	#addFriendToGroupByList(auth, loadFriendList("friend1.txt"), groupName="**Default")
-	#addFriendToGroupByList(auth, loadFriendList("friend2.txt"), groupName="Bin")
-	#printJSON(getRankedByName(auth, '我若安好便是晴天'))
+
 	deleteFriend(auth, "")
 	deleteFriendsByList(auth, loadFriendList("friend4.txt"))
 	
