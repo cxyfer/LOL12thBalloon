@@ -1,35 +1,22 @@
 import os, re, time
 import requests, json
 import argparse
+from datetime import datetime
+
+from auth import *
 
 requests.packages.urllib3.disable_warnings()
 
-header = {	"User-Agent": "Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) LeagueOfLegendsClient/11.15.388.2387 (CEF 74) Safari/537.36",
-			"Content-Type": 'application/json'}
-def printLog(text, end="\n"):
-	print(text, end=end)
-	with open("login.log","a", encoding = 'utf8') as data:
+UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36"
+tonow = datetime.now()
+
+def printLog(text, level="INFO", end="\n"):
+	text = f"{level:>6s} | {text}"
+	print(text)
+	with open("dailywheel.log","a", encoding = 'utf8') as data:
 		data.write(str(text)+end)
-def getToken(folder="C:\\Garena\\Games\\32775\\Game\\Logs\\LeagueClient Logs", sucPrint=True, errPrint=True, multi=False):
-	if os.path.isdir(folder):
-		tokenList =[]
-		for file in sorted(os.listdir(folder),reverse=True):
-			reLog = re.match(r'.+?_LeagueClientUx\.log', file)
-			if reLog:
-				try:
-					with open("{}\\{}".format(folder,file), 'r', encoding="utf-8") as data:
-						reToken = re.search(r'https://.+?\.lol\.garena\.tw/.+?token=(.{64})\"', data.read())
-				except:
-					with open("{}\\{}".format(folder,file), 'r', errors="ignore") as data:
-						reToken = re.search(r'https://.+?\.lol\.garena\.tw/.+?token=(.{64})\"', data.read())
-				if reToken:
-					token = reToken.group(1)
-					print("已從LOL安裝路徑獲取token：{}".format(reToken.group(1))) if sucPrint else print(end="")
-					if not multi: return reToken.group(1) 
-					elif token not in tokenList: tokenList.append(token)
-		if len(tokenList) > 0 : return tokenList 
-	print("錯誤：無法從LOL安裝路徑獲取token，請嘗試輸入安裝路徑或手動獲取token。") if errPrint else print(end="")
-	return False
+def printJSON(data):
+	print(json.dumps(data, ensure_ascii=False, indent=4))
 def getErrDic(aid=3558, refer="https://couponqueen.lol.garena.tw/"):
 	url = "https://rosetta-tw.garenanow.com/transify/{}?lang=2".format(aid)
 	header = {"Referer": refer}
@@ -37,65 +24,70 @@ def getErrDic(aid=3558, refer="https://couponqueen.lol.garena.tw/"):
 	res.encoding = 'utf8'
 	resJson = json.loads(res.text)
 	return {info if info.startswith("ERROR") else "" :resJson[info]  for info in resJson.keys()}
-def getInfo(token, dataPrint=False):
-	header['Referer'] = "https://dailylogin.lol.garena.tw/?token={}".format(token)
-	url = "https://dailylogin.lol.garena.tw/api/info?token={}".format(token)
-	res = requests.get(url, headers=header).json()
 
-	if dataPrint:
-		for i in range(14):
-			print("第{:>2d}天登入領取：{}".format(i+1,res["login_rewards"][i]["name"]))
-			print("　　　額外獎勵：{:>4d} {} 兌換 {}".format(res["missions"][i]["price"],res["missions"][i]["type"].upper(),res["mission_bonuses"][i]["name"]))
-	return res
-def receive(token, day=0, redeem=False): #免費領取
-	header['Referer'] = "https://dailylogin.lol.garena.tw/?token={}".format(token)
-	res = requests.get("https://dailylogin.lol.garena.tw/api/info?token={}".format(token), headers=header)	
-	header["x-csrftoken"] = dict(res.cookies)['csrftoken']
-	url = "https://dailylogin.lol.garena.tw/api/receive" if not redeem else "https://dailylogin.lol.garena.tw/api/redeem"
-	data = {'day': day}
-	res = requests.post(url, headers=header, data=json.dumps(data), cookies=res.cookies)
-	if res.status_code==200:
-		resJson = json.loads(res.text)
-		if 'actual_name' in resJson.keys():
-			printLog("  已兌換獎勵：{}".format(resJson['actual_name']))
-			time.sleep(0.25)
-		elif 'error' in resJson.keys():
-			if resJson['error'] != 'COMMON': printLog(resJson['error'])
-		return resJson
-def supplement(token): #補簽
-	header['Referer'] = "https://dailylogin.lol.garena.tw/?token={}".format(token)
-	res = requests.get("https://dailylogin.lol.garena.tw/api/info?token={}".format(token), headers=header)
-	header["x-csrftoken"] = dict(res.cookies)['csrftoken']
-	url = "https://dailylogin.lol.garena.tw/api/supplement"
-	res = requests.post(url, headers=header, cookies=res.cookies)
-	if res.status_code==200:
-		resJson = json.loads(res.text)
-		if 'supplemented_date' in resJson.keys():
-			timestamp = resJson['supplemented_date']
-			timeString = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timestamp))
-			printLog("  已補簽到：{}".format(timeString))
-		else:
+class dailyLogin():
+	def __init__(self, token):
+		self.token = token
+		self.header = {	"User-Agent": UA,
+						"Content-Type": 'application/json',
+						"Referer": f"https://dailylogin.lol.garena.tw/?token={token}",
+						"token": token, 
+					}
+		self.getInfo(token)
+	def getInfo(self, token, dataPrint=False):
+		url = f"https://dailylogin.lol.garena.tw/api/info?token={token}"
+		res = requests.get(url, headers=self.header)
+		self.header["x-csrftoken"] = dict(res.cookies)['csrftoken']
+		self.cookies = res.cookies
+		self.info = res.json()
+
+		if dataPrint:
+			for i in range(14):
+				print("第{:>2d}天登入領取：{}".format(i+1, self.info["login_rewards"][i]["name"]))
+				print("　　　額外獎勵：{:>4d} {} 兌換 {}".format( self.info["missions"][i]["price"],res["missions"][i]["type"].upper(),res["mission_bonuses"][i]["name"]))
+	def receive(self, token, day=0, redeem=False): #免費領取
+		url = "https://dailylogin.lol.garena.tw/api/receive" if not redeem else "https://dailylogin.lol.garena.tw/api/redeem"
+		data = {'day': day}
+		res = requests.post(url, headers=self.header, data=json.dumps(data), cookies=self.cookies)
+		if res.status_code==200:
+			resJson = res.json()
+			if 'actual_name' in resJson.keys():
+				printLog("  已兌換獎勵：{}".format(resJson['actual_name']))
+				time.sleep(0.25)
+			elif 'error' in resJson.keys():
+				if resJson['error'] != 'COMMON': printLog(resJson['error'])
+			return resJson
+	def supplement(self, token): #補簽
+		url = "https://dailylogin.lol.garena.tw/api/supplement"
+		res = requests.post(url, headers=self.header, cookies=self.cookies)
+		if res.status_code==200:
+			resJson = res.json()
+			if 'supplemented_date' in resJson.keys():
+				timestamp = resJson['supplemented_date']
+				timeString = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timestamp))
+				printLog("  已補簽到：{}".format(timeString))
+			else:
+				return False
+	def couponqueen(self, token):
+		header['Referer'] = "https://couponqueen.lol.garena.tw/?token={}".format(token)
+		header['sso-token'] = token
+		url = "https://couponqueen.lol.garena.tw/api/profile"
+		res = requests.get(url, headers=header)
+		if 'error' in res.json():
+			print(errDic[res.json()['error']])
 			return False
-def couponqueen(token):
-	header['Referer'] = "https://couponqueen.lol.garena.tw/?token={}".format(token)
-	header['sso-token'] = token
-	url = "https://couponqueen.lol.garena.tw/api/profile"
-	res = requests.get(url, headers=header)
-	if 'error' in res.json():
-		print(errDic[res.json()['error']])
-		return False
-	#header["x-csrftoken"] = dict(res.cookies)['csrftoken']
-	profile = res.json()['profile']
-	if profile['wheel_active_index'] != -1:
-		return False
-	else:
-		url = "https://couponqueen.lol.garena.tw/api/spin"
-		res = requests.post(url, headers=header, cookies=res.cookies).json()['profile']
-		results = ["75折","45折","85折","1元","9折","3折"]
-		print(f"  一元特賣抽獎結果：{results[res['wheel_active_index']]}")
-		if res['wheel_active_index'] == 3: #1元
-			print("  可選獎項：", end="")
-			print(" & ".join([reward['name'] for reward in profile['grid']]))
+		#header["x-csrftoken"] = dict(res.cookies)['csrftoken']
+		profile = res.json()['profile']
+		if profile['wheel_active_index'] != -1:
+			return False
+		else:
+			url = "https://couponqueen.lol.garena.tw/api/spin"
+			res = requests.post(url, headers=header, cookies=res.cookies).json()['profile']
+			results = ["75折","45折","85折","1元","9折","3折"]
+			print(f"  一元特賣抽獎結果：{results[res['wheel_active_index']]}")
+			if res['wheel_active_index'] == 3: #1元
+				print("  可選獎項：", end="")
+				print(" & ".join([reward['name'] for reward in profile['grid']]))
 def loadDict(filename="code.txt"):
 	if os.path.exists(filename):
 		with open(filename , "r", encoding = 'utf-8-sig') as data:
@@ -123,70 +115,62 @@ def getParser():
 	#parser.add_argument("-d", "--dir", "--folder", default="D:\\32775\\Game\\Logs\\LeagueClient Logs")
 	parser.add_argument("-t", "--token",  default="")
 	return parser
-def main():
+def main(multi=True):
+	global args, errDic
 	parser = getParser()
 	args = parser.parse_args()
 
-	if os.path.exists("token.txt"):
-		with open("token.txt" , "r", encoding = 'utf-8-sig') as data:
-			tokenDict = {line.strip().split("\t")[0]:line.strip().split("\t")[1] for line in data }
-	else: tokenDict = {}
-
-	tokens = getToken(args.dir, multi=True, sucPrint=False)
+	errDic = getErrDic()
+	# Read & Load token
+	tokens = getToken(args.dir, multi=multi, sucPrint=False)
 	while(not tokens):
 		path = input("請輸入LeagueClient Logs之路徑：\n ")
-		tokens = getToken(path, multi=True)
+		tokens = getToken(path, multi=multi)
+	if multi:
+		tokenDict = loadDict(filename="token.txt")
+		for token in tokens:
+			if token not in tokenDict: tokenDict[token] = 0
+	else:
+		tokenDict= {tokens:0}
 
-	tokenDict = loadDict(filename="token.txt")
-	for token in tokens:
-		if token not in tokenDict.keys():
-			tokenDict[token] = 0
-
+	# Start
+	if multi:
+		printLog(f"{'-'*64}" ,"------")
+		printLog(f"{tonow.year}/{tonow.month:02d}/{tonow.day:02d}" ,"TODAY")
+	countDay = time.localtime().tm_mday
 	for token in tokenDict.keys():
-		countDay = 31 * (time.localtime().tm_mon -1) + time.localtime().tm_mday
-		if tokenDict[token] > countDay-26 or tokenDict[token] >= 14:
+		if tokenDict[token] > countDay-16 or tokenDict[token] >= 14:
 			continue
-		info = getInfo(token)
-		if "logined" not in info.keys(): 
-			if info["error"] == 'LOGIN_FAILED': #LOGIN_FAILED
+		obj = dailyLogin(token)
+		if "logined" not in obj.info.keys(): 
+			if obj.info["error"] == 'LOGIN_FAILED': #LOGIN_FAILED
 				tokenDict[token] = 99
 				continue
 			else:
-				print(info)
+				printJSON(obj.info)
 		print(token)
 		#couponqueen(token)
-		for day in range(int(tokenDict[token]), min(countDay-25, 14)):
-			if info['login_rewards'][day]['received_date']:
+		for day in range(14):
+			if obj.info['login_rewards'][day]['received_date']:
 				tokenDict[token] = day+1
 				continue
-			if info["logined"][day]:
-				receive(token, day=day)
+			if obj.info["logined"][day]:
+				obj.receive(token, day=day)
 				tokenDict[token] = day+1
-			elif len(info["supplemented_dates"]) < 4: #補簽到
-				supplement(token)
-				receive(token, day=day)
-				info = getInfo(token)
-			if day==1: receive(token, day=1, redeem=True)
-			if day==12: receive(token, day=12, redeem=True)
-		receive(token, day=1, redeem=True)
-		receive(token, day=12, redeem=True)
+			elif len(obj.info["supplemented_dates"]) < 4: #補簽到
+				obj.supplement(token)
+				obj.receive(token, day=day)
+				obj.getInfo(token)
+			if day in [4, 7, 9]:
+				obj.receive(token, day=day, redeem=True)
+		for day in [4, 7, 9]:
+			obj.receive(token, day=day, redeem=True)
 
-	saveDict(tokenDict, filename="token.txt", saveNum=88)
+		if multi:
+			saveDict(tokenDict, filename="token.txt", saveNum=1231)
+	if not multi:
+		tokenDict.update(loadDict(filename="token.txt"))
+	saveDict(tokenDict, filename="token.txt", saveNum=70)
 if __name__ == '__main__':
-	#getLog(["虎年賀新春限定禮包", "四個新春狂歡造型碎片"], filename="lcu.log")
-	#exit()
 
-	parser = getParser()
-	args = parser.parse_args()
-
-	#main()
-
-	token = getToken(args.dir, multi=False, sucPrint=False)
-	errDic = getErrDic()
-	couponqueen(token)
-
-	import lcu
-	lcu.main()
-
-	#auth = lcu.getAuth("C:\\Garena\\Games\\32775\\Game\\Logs\\LeagueClient Logs")
-	#print(lcu.getProfile(auth,"神才就狂"))
+	main(multi=True)

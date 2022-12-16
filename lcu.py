@@ -6,6 +6,7 @@ import sql
 from lol_chat import *
 from auth import *
 import store
+from eventShop import eventShop
 
 requests.packages.urllib3.disable_warnings()
 def printLog(text1, end="\n"):
@@ -230,6 +231,14 @@ def main():
 	session = getSession(auth)
 	idToken, acId = session['idToken'], session['accountId']
 
+	try:
+		evt = eventShop(auth)
+		res = evt.purchaseOffer(target='隨機英雄碎片', maxToken=300)
+		if res:
+			printLog(f"  已使用 {res['cost']}個{res['tokenName']} 兌換 {res['count']}個{res['target']}")
+	except Exception as e:
+		pass
+
 	store.buy1Icons(idToken, acId)
 	loots = getLoot(auth, ownChamps=getChampion(auth)["allId"], upgradeBelow=0, disenchantBelow=0,
 		useCurrencyMythic=20, useCoin=100, useCoinCURRENCY=0)
@@ -273,9 +282,9 @@ if __name__ == '__main__':
 	#deleteAllFriends(auth)
 	#cleanAllFriendRequests(auth)
 
-	import dailywheel
-	dailywheel.main(multi=False)
+	import dailylogin
+	dailylogin.main(multi=False)
 
 	main()
-
+	
 	print()

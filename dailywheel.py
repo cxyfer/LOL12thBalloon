@@ -126,7 +126,7 @@ def main(multi=True, typeIdx=-1, skipDonate=0, debug=False):
 	args = parser.parse_args()
 
 	errDic = getErrDic()
-	# Read & ;oad token
+	# Read & Load token
 	tokens = getToken(args.dir, multi=multi, sucPrint=False)
 	while(not tokens):
 		path = input("請輸入LeagueClient Logs之路徑：\n ")
